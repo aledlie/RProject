@@ -87,7 +87,30 @@ INNER JOIN mc_Providers
 ON mc_Providers.ID = mc_InPatientVisits.ProviderID 
 GROUP BY mc_Providers.Name")
 
+PatientsRated9or10 = dbGetQuery(con, "
+Select MC_Providers.Name, MC_Hospital_Reviews.AnswerPercent FROM MC_Providers
+INNER JOIN MC_Hospital_Reviews 
+ON MC_Providers.ID = MC_Hospital_Reviews.ProviderID
+WHERE MC_hospital_reviews.SurveyID = 'H_HSP_RATING_9_10' AND
+MC_Hospital_Reviews.ANSWERPERCENT != 'null'")
+PatientsRated9or10$ANSWERPERCENT <- as.numeric(PatientsRated9or10$ANSWERPERCENT)
+
+CostVSRating = dbGetQuery(con, "
+Select Mc_Hospital_Reviews.Answerpercent AS Rating, Mc_Hospital_Reviews.SurveyID AS Question, 
+MC_OutpatientVisits_2.AverageSubmittedCharges AS Cost, MC_OutpatientServices.Description
+From Mc_Hospital_Reviews
+INNER JOIN MC_OutpatientVisits_2
+ON Mc_Hospital_Reviews.ProviderID = MC_OutpatientVisits_2.ProviderID 
+INNER JOIN MC_OutpatientServices
+ON MC_OutpatientServices.ID = MC_OutpatientVisits_2.APCID
+                          ")
+
+aggregate(cost ~ rating, CostVSRating(QUESTION = 'H_HSP_RATING_9_10'), mean)
+
 p1 <- ggplot(InpatientCostByState, aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
 p2 <- ggplot(outpatientCostByState, aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
-
-p3 <- ggplot(InpatientVisits, aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
+p3 <- hist(InpatientVisits$TotalPayments, main = "Inpatient Procedure Cost", xlab = "Average Ammount Billed Per Procedure")
+p4 <- hist(OutpatientVisits$AVERAGESUBMITTEDCHARGES, main = "Outpatient Procedure Cost", xlab = "Average Ammount Billed Per Procedure")
+p5 <- hist(PatientsRated9or10$ANSWERPERCENT, main = "Patient Satisfaction", xlab = "Patients Rated Hospital 9 or 10")
+p6 <- barplot(InpatientCostByState$AVGBILLEDCOST, main="Inpatient Procedures ", horiz=TRUE, ylab="State", xlab = "Average Cost")
+p7 -> plot(CostVSRating$RATING ~ CostVSRating$Cost)

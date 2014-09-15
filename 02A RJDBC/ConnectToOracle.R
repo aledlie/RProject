@@ -8,7 +8,7 @@ sudo mv ~/Downloads/ojdbc6.jar $JAVA_HOME
 "
 # In the following, use your path instead of /Library/Java/JavaVirtualMachines/jdk1.7.0_51.jdk/Contents/Home
 
-Sys.setenv(JAVA_HOME='/Library/Java/JavaVirtualMachines/jdk1.7.0_51.jdk/Contents/Home')
+Sys.setenv(JAVA_HOME='/Library/Java/JavaVirtualMachines/jdk1.7.0_60.jdk/Contents/Home')
 options(java.parameters="-Xmx2g")
 library(rJava)
 
@@ -19,7 +19,7 @@ print(.jcall("java/lang/System", "S", "getProperty", "java.version"))
 # Load RJDBC library
 library(RJDBC)
 
-jdbcDriver <- JDBC(driverClass="oracle.jdbc.OracleDriver", classPath="/Library/Java/JavaVirtualMachines/jdk1.7.0_51.jdk/Contents/Home/ojdbc6.jar")
+jdbcDriver <- JDBC(driverClass="oracle.jdbc.OracleDriver", classPath="~/ojdbc6.jar")
 
 # The following data.frame will be used as the default if emps can't be loaded from Oracle.
 e1 <- 7369

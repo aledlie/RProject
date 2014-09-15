@@ -87,3 +87,7 @@ INNER JOIN mc_Providers
 ON mc_Providers.ID = mc_InPatientVisits.ProviderID 
 GROUP BY mc_Providers.Name")
 
+p1 <- ggplot(InpatientCostByState, aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
+p2 <- ggplot(outpatientCostByState, aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
+
+p3 <- ggplot(InpatientVisits, aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()

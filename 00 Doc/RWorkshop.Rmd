@@ -6,14 +6,18 @@ R Technology Workshop
 **R is the most popular free software environment for statistical computing and graphics. ggplot2 is a data visualization package for R that can be used to produce publication-quality graphics. This workshop is designed to introduce you to R and ggplot as well as RStudio, KnitR, Slidify, and Shiny.  
 R is a central piece of the Big Data Analytics Revolution, for example, see http://opensource.com/business/14/7/interview-david-smith-revolution-analytics for an article entitled "Big data influencer on how R is paving the way"**
 
-###This is how my RStudio is configured:
+###Dependencies
+####Shiny Configuration
+Install shinyApps and set credentials for shinyapps.io:
+```{r}
+devtools::install_github('rstudio/shinyapps')
+shinyapps::setAccountInfo(name='izac', token='17D9871441F9D62A171F637C90D55BA4', secret='nQyjOYbrmoR0L9cs1NR5a4FlFAzoPIVouilfTLYp')
+```
+
+####RStudio Configuration:
 ```{r}
 sessionInfo()
 ```
-
-You also need to install LaTeX if you want to generate PDF files from KnitR.  
-
-![](./LaTex.png) http://latex-project.org/ftp.html
 
 ###Getting Started - Clone the RWorkshop GiT Repository:
 

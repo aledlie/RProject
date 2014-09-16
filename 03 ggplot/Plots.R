@@ -1,9 +1,7 @@
+library(shiny)
+library(shinyapps)
 options(java.parameters="-Xmx2g")
-library("ggplot2")
-library(rJava)
-library(RJDBC)
-
-jdbcDriver <- JDBC(driverClass="oracle.jdbc.OracleDriver", classPath="/Library/Java/JavaVirtualMachines/jdk1.7.0_65.jdk/Contents/Home/ojdbc6.jar")
+jdbcDriver <- JDBC(driverClass="oracle.jdbc.OracleDriver", classPath="~/ojdbc7.jar")
 con <- dbConnect(jdbcDriver, "jdbc:oracle:thin:@128.83.138.158:1521:orcl", "c##cs347_zi322", "orcl_zi322")
 
 #Import Smaller tables
@@ -11,6 +9,8 @@ HCAHPSMeasure = dbGetQuery(con, "Select * From mc_HCAHPSMeasure")
 InpatientServices <- dbGetQuery(con, "Select * from mc_InpatientServices")
 Providers = dbGetQuery(con, "Select * from mc_Providers")
 OutpatientServices <- dbGetQuery(con, "Select * from mc_OutpatientServices")
+
+dbGetQuery(con, "ALTER TABLE Providers ADD COLUMN lat FLOAT")
 
 #Inport Outpatient Visits Table
 OutpatientVisits <- dbGetQuery(con, "select * from mc_OutpatientVisits_2 WHERE ID BETWEEN 0 and 30000")
@@ -29,91 +29,130 @@ InpatientVisits = rbind(InpatientVisits, dbGetQuery(con, "select * from mc_Inpat
 head(InpatientVisits)
 
 outpatientCostByCity = dbGetQuery(con, 
-                                  "SELECT mc_Providers.City as City, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
-                                  FROM mc_OutPatientVisits 
-                                  INNER JOIN mc_Providers 
-                                  ON mc_Providers.ID = mc_OutPatientVisits.ProviderID 
-                                  GROUP BY mc_Providers.City")
+"SELECT mc_Providers.City as City, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
+FROM mc_OutPatientVisits 
+INNER JOIN mc_Providers 
+ON mc_Providers.ID = mc_OutPatientVisits.ProviderID 
+GROUP BY mc_Providers.City")
 
 outpatientCostByState = dbGetQuery(con, 
-                                   "SELECT mc_Providers.State as State, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
-                                   FROM mc_OutPatientVisits 
-                                   INNER JOIN mc_Providers 
-                                   ON mc_Providers.ID = mc_OutPatientVisits.ProviderID 
-                                   GROUP BY mc_Providers.State")
+"SELECT mc_Providers.State as State, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
+FROM mc_OutPatientVisits 
+INNER JOIN mc_Providers 
+ON mc_Providers.ID = mc_OutPatientVisits.ProviderID 
+GROUP BY mc_Providers.State")
 
 outpatientCostByHospital = dbGetQuery(con, "
-                                      SELECT mc_Providers.Name as Hospital, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
-                                      FROM mc_OutPatientVisits 
-                                      INNER JOIN mc_Providers 
-                                      ON mc_Providers.ID = mc_OutPatientVisits.ProviderID 
-                                      GROUP BY mc_Providers.Name")
+SELECT mc_Providers.Name as Hospital, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
+FROM mc_OutPatientVisits 
+INNER JOIN mc_Providers 
+ON mc_Providers.ID = mc_OutPatientVisits.ProviderID 
+GROUP BY mc_Providers.Name")
 
 outpatientCostByCity = dbGetQuery(con, 
-                                  "SELECT mc_Providers.City as City, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
-                                  FROM mc_OutPatientVisits 
-                                  INNER JOIN mc_Providers 
-                                  ON mc_Providers.ID = mc_OutPatientVisits.ProviderID 
-                                  GROUP BY mc_Providers.City")
+"SELECT mc_Providers.City as City, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
+FROM mc_OutPatientVisits 
+INNER JOIN mc_Providers 
+ON mc_Providers.ID = mc_OutPatientVisits.ProviderID 
+GROUP BY mc_Providers.City")
 
 outpatientCostByState = dbGetQuery(con, 
-                                   "SELECT mc_Providers.State as State, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
-                                   FROM mc_OutPatientVisits 
-                                   INNER JOIN mc_Providers 
-                                   ON mc_Providers.ID = mc_OutPatientVisits.ProviderID 
-                                   GROUP BY mc_Providers.State")
+"SELECT mc_Providers.State as State, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
+FROM mc_OutPatientVisits 
+INNER JOIN mc_Providers 
+ON mc_Providers.ID = mc_OutPatientVisits.ProviderID 
+GROUP BY mc_Providers.State")
 
 outpatientCostByHospital = dbGetQuery(con, 
-                                      "SELECT mc_Providers.Name as Hospital, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
-                                      FROM mc_OutPatientVisits 
-                                      INNER JOIN mc_Providers 
-                                      ON mc_Providers.ID = mc_OutPatientVisits.ProviderID 
-                                      GROUP BY mc_Providers.Name")
+"SELECT mc_Providers.Name as Hospital, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
+FROM mc_OutPatientVisits 
+INNER JOIN mc_Providers 
+ON mc_Providers.ID = mc_OutPatientVisits.ProviderID 
+GROUP BY mc_Providers.Name")
 
 InpatientCostByCity = dbGetQuery(con, 
-                                 "SELECT mc_Providers.City as City, AVG(mc_InPatientVisits.CoveredCharges) as AvgBilledCost 
-                                 FROM mc_InPatientVisits 
-                                 INNER JOIN mc_Providers 
-                                 ON mc_Providers.ID = mc_InPatientVisits.ProviderID 
-                                 GROUP BY mc_Providers.City")
+"SELECT mc_Providers.City as City, AVG(mc_InPatientVisits.CoveredCharges) as AvgBilledCost 
+FROM mc_InPatientVisits 
+INNER JOIN mc_Providers 
+ON mc_Providers.ID = mc_InPatientVisits.ProviderID 
+GROUP BY mc_Providers.City")
 
 InpatientCostByState = dbGetQuery(con, 
-                                  "SELECT mc_Providers.State as State, AVG(mc_InpatientVisits.CoveredCharges) as AvgBilledCost 
-                                  FROM mc_InpatientVisits 
-                                  INNER JOIN mc_Providers 
-                                  ON mc_Providers.ID = mc_InpatientVisits.ProviderID 
-                                  GROUP BY mc_Providers.State")
+"SELECT mc_Providers.State as State, AVG(mc_InpatientVisits.CoveredCharges) as AvgBilledCost 
+FROM mc_InpatientVisits 
+INNER JOIN mc_Providers 
+ON mc_Providers.ID = mc_InpatientVisits.ProviderID 
+GROUP BY mc_Providers.State")
 
 InpatientCostByHospital = dbGetQuery(con, "
-                                     SELECT mc_Providers.Name as Hospital, AVG(mc_InPatientVisits.CoveredCharges) as AvgBilledCost 
-                                     FROM mc_InPatientVisits 
-                                     INNER JOIN mc_Providers 
-                                     ON mc_Providers.ID = mc_InPatientVisits.ProviderID 
-                                     GROUP BY mc_Providers.Name")
+SELECT mc_Providers.Name as Hospital, AVG(mc_InPatientVisits.CoveredCharges) as AvgBilledCost 
+FROM mc_InPatientVisits 
+INNER JOIN mc_Providers 
+ON mc_Providers.ID = mc_InPatientVisits.ProviderID 
+GROUP BY mc_Providers.Name")
 
 PatientsRated9or10 = dbGetQuery(con, "
-                                Select MC_Providers.Name, MC_Hospital_Reviews.AnswerPercent FROM MC_Providers
-                                INNER JOIN MC_Hospital_Reviews 
-                                ON MC_Providers.ID = MC_Hospital_Reviews.ProviderID
-                                WHERE MC_hospital_reviews.SurveyID = 'H_HSP_RATING_9_10' AND
-                                MC_Hospital_Reviews.ANSWERPERCENT != 'null'")
+Select MC_Providers.Name, MC_Hospital_Reviews.AnswerPercent FROM MC_Providers
+INNER JOIN MC_Hospital_Reviews 
+ON MC_Providers.ID = MC_Hospital_Reviews.ProviderID
+WHERE MC_hospital_reviews.SurveyID = 'H_HSP_RATING_9_10' AND
+MC_Hospital_Reviews.ANSWERPERCENT != 'null'")
 PatientsRated9or10$ANSWERPERCENT <- as.numeric(PatientsRated9or10$ANSWERPERCENT)
 
 CostVSRating = dbGetQuery(con, "
 Select Mc_Hospital_Reviews.Answerpercent AS Rating, Mc_Hospital_Reviews.SurveyID AS Question, 
-MC_OutpatientVisits_2.AverageSubmittedCharges AS Cost, MC_OutpatientServices.Description
+MC_OutpatientVisits_2.AverageSubmittedCharges AS Cost, MC_OutpatientServices.Description AS Procedure,
+MC_Providers.Name, MC_Providers.State, MC_Providers.City
 From Mc_Hospital_Reviews
 INNER JOIN MC_OutpatientVisits_2
 ON Mc_Hospital_Reviews.ProviderID = MC_OutpatientVisits_2.ProviderID 
 INNER JOIN MC_OutpatientServices
-ON MC_OutpatientServices.ID = MC_OutpatientVisits_2.APCID")
+ON MC_OutpatientServices.ID = MC_OutpatientVisits_2.APCID
+INNER JOIN MC_Providers
+On MC_OutpatientVisits_2.ProviderID = MC_Providers.ID   
+                          ")
 
-aggregate(cost ~ rating, CostVSRating(QUESTION = 'H_HSP_RATING_9_10'), mean)
+CostVSPatientRating = dbGetQuery(con, "
+Select Mc_Hospital_Reviews.Answerpercent AS Rating, Mc_Hospital_Reviews.SurveyID AS Question, 
+MC_OutpatientVisits_2.AverageSubmittedCharges AS Cost, MC_OutpatientServices.Description AS Procedure,
+MC_Providers.Name, MC_Providers.State, MC_Providers.City
+From Mc_Hospital_Reviews
+INNER JOIN MC_OutpatientVisits_2
+ON Mc_Hospital_Reviews.ProviderID = MC_OutpatientVisits_2.ProviderID 
+INNER JOIN MC_OutpatientServices
+ON MC_OutpatientServices.ID = MC_OutpatientVisits_2.APCID
+INNER JOIN MC_Providers
+On MC_OutpatientVisits_2.ProviderID = MC_Providers.ID   
+WHERE MC_hospital_reviews.SurveyID = 'H_HSP_RATING_9_10' AND
+MC_Hospital_Reviews.ANSWERPERCENT != 'null' 
+                          ")
+
+TexasQuery = dbGetQuery(con, "
+Select MC_Providers.Name as Hospital , MC_Providers.City, MC_OutpatientVisits_2.AverageSubmittedCharges as UninsuredCost, 
+MC_OutpatientVisits_2.AVERAGETOTALPAYMENTS as InsuredCost, MC_OutpatientServices.Description FROM MC_Providers
+INNER JOIN MC_Outpatientvisits_2
+                        ON MC_OutpatientVisits_2.ProviderID = MC_Providers.ID
+                        INNER JOIN MC_OutpatientServices
+                        ON MC_OutpatientServices.ID = MC_OutpatientVisits_2.APCID
+                        WHERE MC_Providers.State = 'TX'
+                        ")
+
+PlotCostVSRating <- aggregate(COST ~ STATE + RATING, CostVSPatientRating, mean)
+PlotCostVSRating$RATING <- as.numeric(PlotCostVSRating$RATING) 
+InpatientVisits$TOTALPAYMENTS <- as.numeric(InpatientVisits$TOTALPATMENTS)
+TexasQuery$UNINSUREDCOST <- as.numeric(TexasQuery$UNINSUREDCOST)
+
+TexasCostByProcedure <- aggregate(UNINSUREDCOST ~ DESCRIPTION, TexasQuery, mean)
+TexasCostVSRating <- subset(PlotCostVSRating, STATE == 'TX')
 
 p1 <- ggplot(InpatientCostByState, aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
 p2 <- ggplot(outpatientCostByState, aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
 p3 <- hist(InpatientVisits$TotalPayments, main = "Inpatient Procedure Cost", xlab = "Average Ammount Billed Per Procedure")
 p4 <- hist(OutpatientVisits$AVERAGESUBMITTEDCHARGES, main = "Outpatient Procedure Cost", xlab = "Average Ammount Billed Per Procedure")
 p5 <- hist(PatientsRated9or10$ANSWERPERCENT, main = "Patient Satisfaction", xlab = "Patients Rated Hospital 9 or 10")
-p6 <- barplot(InpatientCostByState$AVGBILLEDCOST, main="Inpatient Procedures ", horiz=TRUE, ylab="State", xlab = "Average Cost")
-p7 -> plot(CostVSRating$RATING ~ CostVSRating$Cost)
+p7 <- plot(CostVSPatientRating$RATING ~ CostVSPatientRating$COST)
+p9 <- plot(PlotCostVSRating$RATING ~ PlotCostVSRating$COST) + facet_wrap(~STATE)
+p10 <- ggplot(PlotCostVSRating, aes(x = STATE, y = COST)) + geom_bar(stat = "identity") + coord_flip()
+p11 <- hist(TexasQuery$UNINSUREDCOST, main = "Texas Outpatient Procedure Cost", xlab = "Cost") + geom_point()
+p12 <- ggplot(TexasCostByProcedure, aes(x = Description, y = UNINSUREDCOST)) + geom_point() + coord_flip()
+p13 <- ggplot(TexasCostVSRating, aes(x = RATING, y = COST)) + geom_bar(stat = "identity")

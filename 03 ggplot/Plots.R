@@ -1,8 +1,19 @@
+######################
+##      Set-up      ##
+######################
+
+#load libraries needed
 library(shiny)
 library(shinyapps)
+
+#connect to Oracle database
 options(java.parameters="-Xmx2g")
 jdbcDriver <- JDBC(driverClass="oracle.jdbc.OracleDriver", classPath="~/ojdbc7.jar")
 con <- dbConnect(jdbcDriver, "jdbc:oracle:thin:@128.83.138.158:1521:orcl", "c##cs347_zi322", "orcl_zi322")
+
+########################################
+##  Import tables into R from Oracle  ##
+########################################
 
 #Import Smaller tables
 HCAHPSMeasure = dbGetQuery(con, "Select * From mc_HCAHPSMeasure")
@@ -10,13 +21,11 @@ InpatientServices <- dbGetQuery(con, "Select * from mc_InpatientServices")
 Providers = dbGetQuery(con, "Select * from mc_Providers")
 OutpatientServices <- dbGetQuery(con, "Select * from mc_OutpatientServices")
 
-dbGetQuery(con, "ALTER TABLE Providers ADD COLUMN lat FLOAT")
-
 #Inport Outpatient Visits Table
-OutpatientVisits <- dbGetQuery(con, "select * from mc_OutpatientVisits_2 WHERE ID BETWEEN 0 and 30000")
-OutpatientVisits = rbind(OutpatientVisits, dbGetQuery(con, "select * from mc_OutpatientVisits_2 WHERE ID BETWEEN 30001 and 60000"))
-OutpatientVisits = rbind(OutpatientVisits, dbGetQuery(con, "select * from mc_OutpatientVisits_2 WHERE ID BETWEEN 60001 and 90000"))
-OutpatientVisits = rbind(OutpatientVisits, dbGetQuery(con, "select * from mc_OutpatientVisits_2 WHERE ID BETWEEN 90001 and 100000"))
+OutpatientVisits <- dbGetQuery(con, "select * from mc_OutpatientVisits WHERE ID BETWEEN 0 and 30000")
+OutpatientVisits = rbind(OutpatientVisits, dbGetQuery(con, "select * from mc_OutpatientVisits WHERE ID BETWEEN 30001 and 60000"))
+OutpatientVisits = rbind(OutpatientVisits, dbGetQuery(con, "select * from mc_OutpatientVisits WHERE ID BETWEEN 60001 and 90000"))
+OutpatientVisits = rbind(OutpatientVisits, dbGetQuery(con, "select * from mc_OutpatientVisits WHERE ID BETWEEN 90001 and 100000"))
 
 #Import Inpatient Visits Table
 InpatientVisits <- dbGetQuery(con, "select * from mc_InpatientVisits WHERE ID BETWEEN 0 and 30000")
@@ -26,7 +35,9 @@ InpatientVisits = rbind(InpatientVisits, dbGetQuery(con, "select * from mc_Inpat
 InpatientVisits = rbind(InpatientVisits, dbGetQuery(con, "select * from mc_InpatientVisits WHERE ID BETWEEN 100001 and 130000"))
 InpatientVisits = rbind(InpatientVisits, dbGetQuery(con, "select * from mc_InpatientVisits WHERE ID BETWEEN 130001 and 160000"))
 
-head(InpatientVisits)
+###################################
+## Run queries to get dataframes ##
+###################################
 
 outpatientCostByCity = dbGetQuery(con, 
 "SELECT mc_Providers.City as City, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
@@ -110,51 +121,42 @@ INNER JOIN MC_OutpatientServices
 ON MC_OutpatientServices.ID = MC_OutpatientVisits.APCID
 INNER JOIN MC_Providers
 On MC_OutpatientVisits.ProviderID = MC_Providers.ID   
+WHERE MC_Hospital_Reviews.ANSWERPERCENT != 'null'
                           ")
+#############################
+##  Get Data subsets in R  ##
+#############################
 
-CostVSPatientRating = dbGetQuery(con, "
-Select Mc_Hospital_Reviews.Answerpercent AS Rating, Mc_Hospital_Reviews.SurveyID AS Question, 
-MC_OutpatientVisits.AverageSubmittedCharges AS Cost, MC_OutpatientServices.Description AS Procedure,
-MC_Providers.Name, MC_Providers.State, MC_Providers.City
-From Mc_Hospital_Reviews
-INNER JOIN MC_OutpatientVisits
-ON Mc_Hospital_Reviews.ProviderID = MC_OutpatientVisits.ProviderID 
-INNER JOIN MC_OutpatientServices
-ON MC_OutpatientServices.ID = MC_OutpatientVisits.APCID
-INNER JOIN MC_Providers
-On MC_OutpatientVisits.ProviderID = MC_Providers.ID   
-WHERE MC_hospital_reviews.SurveyID = 'H_HSP_RATING_9_10' AND
-MC_Hospital_Reviews.ANSWERPERCENT != 'null' 
-                          ")
+Rated9or10 = subset(CostVSRating, QUESTION == 'H_HSP_RATING_9_10')
+Rated7or8 = subset(CostVSRating, QUESTION == 'H_HSP_RATING_7_8')
+Rated0to6 = subset(CostVSRating, QUESTION == 'H_HSP_RATING_0_6')
+DefinitelyRecommend = subset(CostVSRating, QUESTION == 'H_RECMND_DY')
+ProbablyRecommend = subset(CostVSRating, QUESTION == 'H_RECMND_PY')
+NotRecommend = subset(CostVSRating, QUESTION == 'H_RECMND_DN')
 
-TexasQuery = dbGetQuery(con, "
-Select MC_Providers.Name as Hospital , MC_Providers.City, MC_OutpatientVisits_2.AverageSubmittedCharges as UninsuredCost, 
-MC_OutpatientVisits_2.AVERAGETOTALPAYMENTS as InsuredCost, MC_OutpatientServices.Description FROM MC_Providers
-INNER JOIN MC_Outpatientvisits_2
-                        ON MC_OutpatientVisits_2.ProviderID = MC_Providers.ID
-                        INNER JOIN MC_OutpatientServices
-                        ON MC_OutpatientServices.ID = MC_OutpatientVisits_2.APCID
-                        WHERE MC_Providers.State = 'TX'
-                        ")
-
-PlotCostVSRating <- aggregate(COST ~ STATE + RATING, CostVSPatientRating, mean)
-PlotCostVSRating$RATING <- as.numeric(PlotCostVSRating$RATING) 
+AverageCostBy910Rating <- aggregate(COST ~ RATING, Rated9or10, mean)
+AverageCostBy910Rating$RATING <- as.numeric(AverageCostBy910Rating$RATING) 
 InpatientVisits$TOTALPAYMENTS <- as.numeric(InpatientVisits$TOTALPAYMENTS)
 TexasQuery$UNINSUREDCOST <- as.numeric(TexasQuery$UNINSUREDCOST)
 
-p <- subset(OutpatientVisit, OutpatientVisits$APCID = 12)
+p <- subset(OutpatientVisits, APCID == 12)
+p <- mean(p$AVERAGESUBMITTEDCHARGES)
 TexasCostByProcedure <- aggregate(UNINSUREDCOST ~ DESCRIPTION, TexasQuery, mean)
-TexasCostVSRating <- subset(PlotCostVSRating, STATE == 'TX')
+TexasCostVSRating <- subset(AverageCostBy910Rating, STATE == 'TX')
+
+######################
+##      Plots     ##
+######################
 
 p1 <- ggplot(InpatientCostByState, aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
 p2 <- ggplot(outpatientCostByState, aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
 arr = c(0, 10000, 20000, 30000, 600000)
-p3 <- hist(InpatientVisits$TOTALPAYMENTS, main = "Inpatient Procedure Cost", xlab = "Average Ammount Billed Per Procedure", xlim = c(0, 60000))
+p3 <- hist(InpatientVisits$TOTALPAYMENTS, main = "Inpatient Procedure Cost", xlab = "Average Ammount Billed Per Procedure", ylab = "# of Hospitals", xlim = c(0, 60000))
 p4 <- hist(OutpatientVisits$AVERAGESUBMITTEDCHARGES, main = "Outpatient Procedure Cost", xlab = "Average Amount Billed Per Procedure", xlim = c(0, 12000))
-p5 <- hist(PatientsRated9or10$ANSWERPERCENT, main = "Hospitals Rated 9/10 Out of 10", xlab = "Percent of Patients", xlim = c(25, 100))
-p7 <- plot(CostVSPatientRating$RATING ~ CostVSPatientRating$COST)
-p9 <- plot(PlotCostVSRating$RATING ~ PlotCostVSRating$COST) + facet_wrap(~STATE)
-p10 <- ggplot(PlotCostVSRating, aes(x = STATE, y = COST)) + geom_bar(stat = "identity") + coord_flip()
-p11 <- hist(TexasQuery$UNINSUREDCOST, main = "Texas Outpatient Procedure Cost", xlab = "Cost") + geom_point()
-p12 <- ggplot(TexasCostByProcedure, aes(x = Description, y = UNINSUREDCOST)) + geom_point() + coord_flip()
-p13 <- ggplot(TexasCostVSRating, aes(x = RATING, y = COST)) + geom_point()
+p5 <- hist(PatientsRated9or10$ANSWERPERCENT, main = "Patient Satisfaction \nRatings", xlab = "Percent of Patients Who Rated \n Their Hospital 9+ out of 10", ylab = "# of Hospitals", xlim = c(25, 100))
+p16 <- ggplot(AverageCostBy910Rating, aes(x = RATING, y = COST)) + geom_point() + coord_flip()
+p7 <- ggplot(Rated9or10, aes(x = RATING, y = COST)) + geom_point() + facet_wrap(~PROCEDURE)
+p8 <- ggplot(Rated9or10, aes(x = RATING, y = COST)) + geom_point() + facet_wrap(~STATE)
+p9 <- hist(TexasQuery$UNINSUREDCOST, main = "Texas Outpatient Procedure Cost", xlab = "Cost") + geom_point()
+p10 <- ggplot(TexasCostByProcedure, aes(x = Description, y = UNINSUREDCOST)) + geom_point() + coord_flip()
+p11 <- ggplot(TexasCostVSRating, aes(x = RATING, y = COST)) + geom_point()

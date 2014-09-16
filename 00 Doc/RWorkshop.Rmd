@@ -3,8 +3,7 @@ output: html_document
 ---
 R Technology Workshop
 ===
-**R is the most popular free software environment for statistical computing and graphics. ggplot2 is a data visualization package for R that can be used to produce publication-quality graphics. This workshop is designed to introduce you to R and ggplot as well as RStudio, KnitR, Slidify, and Shiny.  
-R is a central piece of the Big Data Analytics Revolution, for example, see http://opensource.com/business/14/7/interview-david-smith-revolution-analytics for an article entitled "Big data influencer on how R is paving the way"**
+**In 2011, the health care industry consumed 17.7% of US GDP, an average of 8,508 per person in the US.  This is the highest as both a dollar ammount and as a GDP percentage of any OECD county, and yet the United States ranks 26th out of 34 for life expectancy (at 78.7 years).  Health care decisions are arguably the most important decisions any of will make as consumers, and yet there is little to no market transparency on how much procedures cost, what our options are as consumers, and if we're receiving better care for higher prices.  We've chosen to work with a data set released by CMS, the government body in charge of Medicare, to help improve transparency for consumers and answer some very basic questions about the relationship between cost and quality in our health care system which would otherwise be impossible answer.**
 
 ###This is how my RStudio is configured:
 ```{r}
@@ -19,54 +18,8 @@ You also need to install LaTeX if you want to generate PDF files from KnitR.
 
 **Phils-MacBook-Pro:Mine pcannata$ pwd**  
 /Users/pcannata/Mine  
-**Phils-MacBook-Pro:Mine pcannata$ git clone https://github.com/pcannata/RWorkshop.git**  
-Cloning into 'RWorkshop'...  
-remote: Counting objects: 19, done.  
-remote: Compressing objects: 100% (12/12), done.  
-remote: Total 19 (delta 3), reused 19 (delta 3)  
-Unpacking objects: 100% (19/19), done.  
-Checking connectivity... done  
-**Phils-MacBook-Pro:Mine pcannata$ ls -a RWorkshop/**  
-.  		.Rprofile.R		00 Doc			03 ggplot		05 KnitR 02  
-..			.git			01 Basic R		04 KnitR 01		RWorkshop.Rproj  
+**To clone the repository, type into terminal/command line:  git clone https://github.com/alyshialedlie/RProject**  
 
-###Getting Started - Create a New RStudio Project for the code in the cloned repository:
-
-![](./NewProject.png)  
-
-![](./NewProject2.png)  
-
-![](./NewProject3.png)  
-
-![](./NewProject4.png)    
-
-###Getting Started - Create .Rprofile file to load ggplot and gplot libraries when the project is started: 
-
-![](./Rprofile.png) 
-
-Create an new file named .Rprofile by copying a file, see below 
-
-![](./Rprofile1.png) 
-
-Copy what's in blue above into the new file named .Rprofile as below, 
-
-![](./Rprofile2.png) 
-
-
-###Recommended Books:
-
-![](./RforEveryone.png) ![](./ReproducibleResearch.png)  
-http://www.amazon.com/Everyone-Advanced-Analytics-Graphics-Addison-Wesley/dp/0321888030/ref=sr_1_1?ie=UTF8&qid=1404611818&sr=8-1&keywords=R+for+everyone
-
-http://www.amazon.com/Reproducible-Research-RStudio-Chapman-Series/dp/1466572841/ref=sr_1_1?ie=UTF8&qid=1404612129&sr=8-1&keywords=reproducible+research+with+r
-
-###Basic R Language Constructs
-
-See also http://cran.r-project.org/doc/manuals/r-devel/R-lang.html, http://www.r-tutor.com/r-introduction, and http://www.cookbook-r.com/
-
-```{r}
-source("../01 Basic R/Basic.R", echo = TRUE)
-```
 
 ###R Dataframes
 

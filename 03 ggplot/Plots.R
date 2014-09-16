@@ -112,8 +112,8 @@ PatientsRated9or10$ANSWERPERCENT <- as.numeric(PatientsRated9or10$ANSWERPERCENT)
 
 CostVSRating = dbGetQuery(con, "
 Select Mc_Hospital_Reviews.Answerpercent AS Rating, Mc_Hospital_Reviews.SurveyID AS Question, 
-MC_OutpatientVisits.AverageSubmittedCharges AS Cost, MC_OutpatientServices.Description AS Procedure,
-MC_Providers.Name, MC_Providers.State, MC_Providers.City
+MC_OutpatientVisits.AverageSubmittedCharges AS Cost, MC_OutpatientVisits.AVERAGETOTALPAYMENTS AS InsuredCost, MC_OutpatientServices.Description AS Procedure,
+MC_Providers.Name, MC_Providers.State, MC_Providers.HOSPITALREFERRALREGION AS Region
 From Mc_Hospital_Reviews
 INNER JOIN MC_OutpatientVisits
 ON Mc_Hospital_Reviews.ProviderID = MC_OutpatientVisits.ProviderID 
@@ -123,6 +123,7 @@ INNER JOIN MC_Providers
 On MC_OutpatientVisits.ProviderID = MC_Providers.ID   
 WHERE MC_Hospital_Reviews.ANSWERPERCENT != 'null'
                           ")
+
 #############################
 ##  Get Data subsets in R  ##
 #############################
@@ -133,30 +134,31 @@ Rated0to6 = subset(CostVSRating, QUESTION == 'H_HSP_RATING_0_6')
 DefinitelyRecommend = subset(CostVSRating, QUESTION == 'H_RECMND_DY')
 ProbablyRecommend = subset(CostVSRating, QUESTION == 'H_RECMND_PY')
 NotRecommend = subset(CostVSRating, QUESTION == 'H_RECMND_DN')
+TexasQuery = subset(CostVSRating, STATE == 'TX')
+AustinQuery = subset(TexasQuery, REGION == 'TX - Austin')
 
 AverageCostBy910Rating <- aggregate(COST ~ RATING, Rated9or10, mean)
 AverageCostBy910Rating$RATING <- as.numeric(AverageCostBy910Rating$RATING) 
 InpatientVisits$TOTALPAYMENTS <- as.numeric(InpatientVisits$TOTALPAYMENTS)
-TexasQuery$UNINSUREDCOST <- as.numeric(TexasQuery$UNINSUREDCOST)
+#TexasQuery$UNINSUREDCOST <- as.numeric(TexasQuery$UNINSUREDCOST)
 
 p <- subset(OutpatientVisits, APCID == 12)
 p <- mean(p$AVERAGESUBMITTEDCHARGES)
-TexasCostByProcedure <- aggregate(UNINSUREDCOST ~ DESCRIPTION, TexasQuery, mean)
-TexasCostVSRating <- subset(AverageCostBy910Rating, STATE == 'TX')
+TexasCostByProcedure <- aggregate(INSUREDCOST ~ PROCEDURE, TexasQuery, mean)
 
 ######################
-##      Plots     ##
+##      Plots       ##
 ######################
 
 p1 <- ggplot(InpatientCostByState, aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
 p2 <- ggplot(outpatientCostByState, aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
-arr = c(0, 10000, 20000, 30000, 600000)
 p3 <- hist(InpatientVisits$TOTALPAYMENTS, main = "Inpatient Procedure Cost", xlab = "Average Ammount Billed Per Procedure", ylab = "# of Hospitals", xlim = c(0, 60000))
 p4 <- hist(OutpatientVisits$AVERAGESUBMITTEDCHARGES, main = "Outpatient Procedure Cost", xlab = "Average Amount Billed Per Procedure", xlim = c(0, 12000))
 p5 <- hist(PatientsRated9or10$ANSWERPERCENT, main = "Patient Satisfaction \nRatings", xlab = "Percent of Patients Who Rated \n Their Hospital 9+ out of 10", ylab = "# of Hospitals", xlim = c(25, 100))
-p16 <- ggplot(AverageCostBy910Rating, aes(x = RATING, y = COST)) + geom_point() + coord_flip()
+p6 <- ggplot(AverageCostBy910Rating, aes(x = RATING, y = COST)) + geom_point() + coord_flip()
 p7 <- ggplot(Rated9or10, aes(x = RATING, y = COST)) + geom_point() + facet_wrap(~PROCEDURE)
 p8 <- ggplot(Rated9or10, aes(x = RATING, y = COST)) + geom_point() + facet_wrap(~STATE)
-p9 <- hist(TexasQuery$UNINSUREDCOST, main = "Texas Outpatient Procedure Cost", xlab = "Cost") + geom_point()
+#p9 <- hist(TexasQuery$UNINSUREDCOST, main = "Texas Outpatient Procedure \nCost", xlab = "Cost")
 p10 <- ggplot(TexasCostByProcedure, aes(x = Description, y = UNINSUREDCOST)) + geom_point() + coord_flip()
-p11 <- ggplot(TexasCostVSRating, aes(x = RATING, y = COST)) + geom_point()
+p11 <- ggplot(TexasQuery, aes(x = RATING, y = COST)) + geom_point() + facet_wrap(~PROCEDURE)
+p12 <- ggplot(AustinQuery, aes(x = RATING, y = COST)) + geom_point() + facet_wrap(~PROCEDURE)

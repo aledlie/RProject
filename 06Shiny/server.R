@@ -10,6 +10,8 @@ jdbcDriver <- JDBC(driverClass="oracle.jdbc.OracleDriver", classPath="/Library/J
 con <- dbConnect(jdbcDriver, "jdbc:oracle:thin:@128.83.138.158:1521:orcl", "c##cs347_zi322", "orcl_zi322")
 
 
+
+
 outpatientCostByState = dbGetQuery(con, 
                                    "SELECT mc_Providers.State as State, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
                                    FROM mc_OutPatientVisits 
@@ -27,17 +29,25 @@ getOutpatientCostByState <- function(state) {
                   ON mc_Providers.ID = mc_OutPatientVisits.ProviderID  
                   WHERE mc_Providers.State = '", state,
                   "' GROUP BY mc_Providers.State", sep="")
-#   queryString <- "SELECT mc_Providers.State as State, AVG(mc_OutPatientVisits.AverageSubmittedCharges) as AvgBilledCost 
-#                   FROM mc_OutPatientVisits
-#                   INNER JOIN mc_Providers 
-#                   ON mc_Providers.ID = mc_OutPatientVisits.ProviderID  
-#                   WHERE mc_Providers.State = 'AL' 
-#                   GROUP BY mc_Providers.State"
+
   outpatientCostByState = dbGetQuery(con, queryString)
   # return outpatientCostByState
 }
 
+getProcedureMap <- function(procedureName, limitCharge) {
+  queryString <- paste("SELECT * FROM TEMP INNER JOIN mc_outpatientvisits 
+                     ON temp.id = mc_outpatientvisits.providerid 
+                     INNER JOIN mc_outpatientservices ON mc_outpatientservices.ID = mc_outpatientVisits.APCID 
+                     where mc_outpatientservices.description = '", procedureName, "'",
+                     "and mc_outpatientvisits.averagesubmittedcharges < ", limitCharge , sep="")
+  print(queryString)
+  result <- dbGetQuery(con, queryString)
+}
+
 shinyServer(function(input, output) {
+  
+  states <- dbGetQuery(con, "SELECT DISTINCT State FROM MC_Providers")
+  outpatientProcedures <- dbGetQuery(con, "SELECT Description FROM MC_OutpatientServices")
   
   # This function only runs when the state input is changed
 #   dataset <- reactive(function() {
@@ -46,8 +56,9 @@ shinyServer(function(input, output) {
   dataset <- reactive(function(){ 
     print(input$state)
     getOutpatientCostByState(input$state)
+    getProcedureMap(input$procedure, input$maxProcCharge)
   })
-  
+
   output$distPlot <- renderPlot({
     
     # Get query results
@@ -55,8 +66,15 @@ shinyServer(function(input, output) {
     # generate an rnorm distribution and plot it
     # dist <- rnorm(input$state)
     # hist(dist)
-    dataset()
-    p2 <- ggplot(dataset(), aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
-    p2
+    medicareData <- dataset()
+    #   render map plot
+    map(database= "usa", ylim=c(45,90), xlim=c(-160,-50), col="grey80", fill=TRUE, projection="gilbert", orientation= c(90,0,225))
+
+    lon <- medicareData$LONGITUDE 
+    lat <- medicareData$LATITUDE  
+    coord <- mapproject(lon, lat, proj="gilbert", orientation=c(90, 0, 225))  #convert points to projected lat/long
+    points(coord, pch=20, cex=0.2, col=4)  #plot converted points
+#     p2 <- ggplot(dataset(), aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
+#     p2
   })
 })

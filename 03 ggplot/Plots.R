@@ -1,7 +1,9 @@
 library(shiny)
 library(shinyapps)
+library(maps)
+library(mapproj)
 options(java.parameters="-Xmx2g")
-jdbcDriver <- JDBC(driverClass="oracle.jdbc.OracleDriver", classPath="~/ojdbc7.jar")
+jdbcDriver <- JDBC(driverClass="oracle.jdbc.OracleDriver", classPath="/Library/Java/JavaVirtualMachines/jdk1.7.0_65.jdk/Contents/Home/ojdbc6.jar")
 con <- dbConnect(jdbcDriver, "jdbc:oracle:thin:@128.83.138.158:1521:orcl", "c##cs347_zi322", "orcl_zi322")
 
 #Import Smaller tables
@@ -101,15 +103,15 @@ PatientsRated9or10$ANSWERPERCENT <- as.numeric(PatientsRated9or10$ANSWERPERCENT)
 
 CostVSRating = dbGetQuery(con, "
 Select Mc_Hospital_Reviews.Answerpercent AS Rating, Mc_Hospital_Reviews.SurveyID AS Question, 
-MC_OutpatientVisits_2.AverageSubmittedCharges AS Cost, MC_OutpatientServices.Description AS Procedure,
+MC_OutpatientVisits.AverageSubmittedCharges AS Cost, MC_OutpatientServices.Description AS Procedure,
 MC_Providers.Name, MC_Providers.State, MC_Providers.City
 From Mc_Hospital_Reviews
-INNER JOIN MC_OutpatientVisits_2
-ON Mc_Hospital_Reviews.ProviderID = MC_OutpatientVisits_2.ProviderID 
+INNER JOIN MC_OutpatientVisits
+ON Mc_Hospital_Reviews.ProviderID = MC_OutpatientVisits.ProviderID 
 INNER JOIN MC_OutpatientServices
-ON MC_OutpatientServices.ID = MC_OutpatientVisits_2.APCID
+ON MC_OutpatientServices.ID = MC_OutpatientVisits.APCID
 INNER JOIN MC_Providers
-On MC_OutpatientVisits_2.ProviderID = MC_Providers.ID   
+On MC_OutpatientVisits.ProviderID = MC_Providers.ID   
                           ")
 
 CostVSPatientRating = dbGetQuery(con, "

@@ -17,7 +17,7 @@ outpatientProcedures <- dbGetQuery(con, "SELECT Description FROM MC_OutpatientSe
 shinyUI(pageWithSidebar(
 
   # Application title
-  headerPanel("Medicare by State"),
+  headerPanel("Outpatient Procedure Costs"),
 
   # Sidebar with a slider input for number of observations
   sidebarPanel(

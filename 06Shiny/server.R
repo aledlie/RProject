@@ -48,6 +48,10 @@ shinyServer(function(input, output) {
   
   states <- dbGetQuery(con, "SELECT DISTINCT State FROM MC_Providers")
   outpatientProcedures <- dbGetQuery(con, "SELECT Description FROM MC_OutpatientServices")
+  maxes <- dbGetQuery(con, "Select MC_OutPatientServices.Description, MAX(MC_OutpatientVisits.AverageSubmittedCharges) as Max 
+                      FROM MC_OutPatientVisits INNER JOIN MC_OutPatientServices
+                      ON MC_OutPatientVisits.APCID = MC_OutPatientServices.ID
+                      GROUP BY MC_OutPatientServices.Description")
   
   # This function only runs when the state input is changed
 #   dataset <- reactive(function() {
@@ -58,6 +62,11 @@ shinyServer(function(input, output) {
     getOutpatientCostByState(input$state)
     getProcedureMap(input$procedure, input$maxProcCharge)
   })
+
+max <- reactive(function() {
+  max1 <- subset(maxes, DESCRIPTION == input$procedure)
+  result <-max1$MAX
+})
 
   output$distPlot <- renderPlot({
     

@@ -137,10 +137,12 @@ NotRecommend = subset(CostVSRating, QUESTION == 'H_RECMND_DN')
 TexasQuery = subset(CostVSRating, STATE == 'TX')
 AustinQuery = subset(TexasQuery, REGION == 'TX - Austin')
 
-AverageCostBy910Rating <- aggregate(COST ~ RATING, Rated9or10, mean)
+AverageCostBy910Rating <- aggregate(cbind(COST, INSUREDCOST) ~ PROCEDURE, Rated9or10, mean)
 AverageCostBy910Rating$RATING <- as.numeric(AverageCostBy910Rating$RATING) 
 InpatientVisits$TOTALPAYMENTS <- as.numeric(InpatientVisits$TOTALPAYMENTS)
-#TexasQuery$UNINSUREDCOST <- as.numeric(TexasQuery$UNINSUREDCOST)
+
+costs <- table(AverageCostBy910Rating)
+ex <- barplot(costs)
 
 p <- subset(OutpatientVisits, APCID == 12)
 p <- mean(p$AVERAGESUBMITTEDCHARGES)

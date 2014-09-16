@@ -101,28 +101,28 @@ PatientsRated9or10$ANSWERPERCENT <- as.numeric(PatientsRated9or10$ANSWERPERCENT)
 
 CostVSRating = dbGetQuery(con, "
 Select Mc_Hospital_Reviews.Answerpercent AS Rating, Mc_Hospital_Reviews.SurveyID AS Question, 
-MC_OutpatientVisits_2.AverageSubmittedCharges AS Cost, MC_OutpatientServices.Description AS Procedure,
+MC_OutpatientVisits.AverageSubmittedCharges AS Cost, MC_OutpatientServices.Description AS Procedure,
 MC_Providers.Name, MC_Providers.State, MC_Providers.City
 From Mc_Hospital_Reviews
-INNER JOIN MC_OutpatientVisits_2
-ON Mc_Hospital_Reviews.ProviderID = MC_OutpatientVisits_2.ProviderID 
+INNER JOIN MC_OutpatientVisits
+ON Mc_Hospital_Reviews.ProviderID = MC_OutpatientVisits.ProviderID 
 INNER JOIN MC_OutpatientServices
-ON MC_OutpatientServices.ID = MC_OutpatientVisits_2.APCID
+ON MC_OutpatientServices.ID = MC_OutpatientVisits.APCID
 INNER JOIN MC_Providers
-On MC_OutpatientVisits_2.ProviderID = MC_Providers.ID   
+On MC_OutpatientVisits.ProviderID = MC_Providers.ID   
                           ")
 
 CostVSPatientRating = dbGetQuery(con, "
 Select Mc_Hospital_Reviews.Answerpercent AS Rating, Mc_Hospital_Reviews.SurveyID AS Question, 
-MC_OutpatientVisits_2.AverageSubmittedCharges AS Cost, MC_OutpatientServices.Description AS Procedure,
+MC_OutpatientVisits.AverageSubmittedCharges AS Cost, MC_OutpatientServices.Description AS Procedure,
 MC_Providers.Name, MC_Providers.State, MC_Providers.City
 From Mc_Hospital_Reviews
-INNER JOIN MC_OutpatientVisits_2
-ON Mc_Hospital_Reviews.ProviderID = MC_OutpatientVisits_2.ProviderID 
+INNER JOIN MC_OutpatientVisits
+ON Mc_Hospital_Reviews.ProviderID = MC_OutpatientVisits.ProviderID 
 INNER JOIN MC_OutpatientServices
-ON MC_OutpatientServices.ID = MC_OutpatientVisits_2.APCID
+ON MC_OutpatientServices.ID = MC_OutpatientVisits.APCID
 INNER JOIN MC_Providers
-On MC_OutpatientVisits_2.ProviderID = MC_Providers.ID   
+On MC_OutpatientVisits.ProviderID = MC_Providers.ID   
 WHERE MC_hospital_reviews.SurveyID = 'H_HSP_RATING_9_10' AND
 MC_Hospital_Reviews.ANSWERPERCENT != 'null' 
                           ")
@@ -139,20 +139,22 @@ INNER JOIN MC_Outpatientvisits_2
 
 PlotCostVSRating <- aggregate(COST ~ STATE + RATING, CostVSPatientRating, mean)
 PlotCostVSRating$RATING <- as.numeric(PlotCostVSRating$RATING) 
-InpatientVisits$TOTALPAYMENTS <- as.numeric(InpatientVisits$TOTALPATMENTS)
+InpatientVisits$TOTALPAYMENTS <- as.numeric(InpatientVisits$TOTALPAYMENTS)
 TexasQuery$UNINSUREDCOST <- as.numeric(TexasQuery$UNINSUREDCOST)
 
+p <- subset(OutpatientVisit, OutpatientVisits$APCID = 12)
 TexasCostByProcedure <- aggregate(UNINSUREDCOST ~ DESCRIPTION, TexasQuery, mean)
 TexasCostVSRating <- subset(PlotCostVSRating, STATE == 'TX')
 
 p1 <- ggplot(InpatientCostByState, aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
 p2 <- ggplot(outpatientCostByState, aes(x = STATE, y = AVGBILLEDCOST)) + geom_point() + coord_flip()
-p3 <- hist(InpatientVisits$TotalPayments, main = "Inpatient Procedure Cost", xlab = "Average Ammount Billed Per Procedure")
-p4 <- hist(OutpatientVisits$AVERAGESUBMITTEDCHARGES, main = "Outpatient Procedure Cost", xlab = "Average Ammount Billed Per Procedure")
-p5 <- hist(PatientsRated9or10$ANSWERPERCENT, main = "Patient Satisfaction", xlab = "Patients Rated Hospital 9 or 10")
+arr = c(0, 10000, 20000, 30000, 600000)
+p3 <- hist(InpatientVisits$TOTALPAYMENTS, main = "Inpatient Procedure Cost", xlab = "Average Ammount Billed Per Procedure", xlim = c(0, 60000))
+p4 <- hist(OutpatientVisits$AVERAGESUBMITTEDCHARGES, main = "Outpatient Procedure Cost", xlab = "Average Amount Billed Per Procedure", xlim = c(0, 12000))
+p5 <- hist(PatientsRated9or10$ANSWERPERCENT, main = "Hospitals Rated 9/10 Out of 10", xlab = "Percent of Patients", xlim = c(25, 100))
 p7 <- plot(CostVSPatientRating$RATING ~ CostVSPatientRating$COST)
 p9 <- plot(PlotCostVSRating$RATING ~ PlotCostVSRating$COST) + facet_wrap(~STATE)
 p10 <- ggplot(PlotCostVSRating, aes(x = STATE, y = COST)) + geom_bar(stat = "identity") + coord_flip()
 p11 <- hist(TexasQuery$UNINSUREDCOST, main = "Texas Outpatient Procedure Cost", xlab = "Cost") + geom_point()
 p12 <- ggplot(TexasCostByProcedure, aes(x = Description, y = UNINSUREDCOST)) + geom_point() + coord_flip()
-p13 <- ggplot(TexasCostVSRating, aes(x = RATING, y = COST)) + geom_bar(stat = "identity")
+p13 <- ggplot(TexasCostVSRating, aes(x = RATING, y = COST)) + geom_point()

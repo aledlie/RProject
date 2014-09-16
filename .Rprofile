@@ -3,3 +3,4 @@ library("ggplot2", lib.loc="/usr/local/Cellar/r/3.1.1/R.framework/Versions/3.1/R
 library("rJava", lib.loc="/usr/local/Cellar/r/3.1.1/R.framework/Versions/3.1/Resources/library")
 library("RJDBC", lib.loc="/usr/local/Cellar/r/3.1.1/R.framework/Versions/3.1/Resources/library")
 library("shiny", lib.loc="/usr/local/Cellar/r/3.1.1/R.framework/Versions/3.1/Resources/library")
+library("shinyapps")

@@ -1,187 +1,140 @@
 ---
 output: html_document
 ---
-R Technology Workshop
+Medicare Analysis
 ===
-**R is the most popular free software environment for statistical computing and graphics. ggplot2 is a data visualization package for R that can be used to produce publication-quality graphics. This workshop is designed to introduce you to R and ggplot as well as RStudio, KnitR, Slidify, and Shiny.  
-R is a central piece of the Big Data Analytics Revolution, for example, see http://opensource.com/business/14/7/interview-david-smith-revolution-analytics for an article entitled "Big data influencer on how R is paving the way"**
+
+In 2011, the health care industry consumed 17.7% of US GDP, an average of 8,508 per person in the US. This is the highest as both a dollar ammount and as a GDP percentage of any OECD county, and yet the United States ranks 26th out of 34 for life expectancy (at 78.7 years). Health care decisions are arguably the most important decisions any of will make as consumers, and yet there is little to no market transparency on how much procedures cost, what our options are as consumers, and if we're receiving better care for higher prices. We've chosen to work with a data set released by CMS, the government body in charge of Medicare, to help improve transparency for consumers and answer some very basic questions about the relationship between cost and quality in our health care system which would otherwise be impossible answer.
+
+###Data Model
+![datamodel](datamodel.png)
+
+###Project Dependencies
+
+####Installed Packages
+Packages are automatically retrieved and installed from the .RProfile file at the root of the directory. If using a version of R different
+than 3.1, you may need to change the location of the libraries in the system. The .RProfile for this project includes the following:
+
+![RProfile](rprofile.png)
+
+The library location path for the current user can be found using:
+```{r}
+.libPaths()
+```
+For me this is "/Library/Frameworks/R.framework/Versions/3.1/Resources/library"
+
+####Installing JDBC driver interface for R and Oracle and Connecting to the Database
+You will need to change the location of the Oracle Driver to the path where it is stored in your computer.
+The database credentials are for my Oracle database.
+
+```
+options(java.parameters="-Xmx2g")
+jdbcDriver <- JDBC(driverClass="oracle.jdbc.OracleDriver", classPath="/Library/Java/JavaVirtualMachines/jdk1.7.0_65.jdk/Contents/Home/ojdbc6.jar")
+con <- dbConnect(jdbcDriver, "jdbc:oracle:thin:@128.83.138.158:1521:orcl", "c##cs347_zi322", "orcl_zi322")
+```
 
 ###This is how my RStudio is configured:
 ```{r}
 sessionInfo()
 ```
 
-You also need to install LaTeX if you want to generate PDF files from KnitR.  
-
-![](./LaTex.png) http://latex-project.org/ftp.html
-
 ###Getting Started - Clone the RWorkshop GiT Repository:
 
-**Phils-MacBook-Pro:Mine pcannata$ pwd**  
-/Users/pcannata/Mine  
-**Phils-MacBook-Pro:Mine pcannata$ git clone https://github.com/pcannata/RWorkshop.git**  
-Cloning into 'RWorkshop'...  
-remote: Counting objects: 19, done.  
-remote: Compressing objects: 100% (12/12), done.  
-remote: Total 19 (delta 3), reused 19 (delta 3)  
-Unpacking objects: 100% (19/19), done.  
-Checking connectivity... done  
-**Phils-MacBook-Pro:Mine pcannata$ ls -a RWorkshop/**  
-.  		.Rprofile.R		00 Doc			03 ggplot		05 KnitR 02  
-..			.git			01 Basic R		04 KnitR 01		RWorkshop.Rproj  
+![Cloning the Git repository](./git-clone-repo.png)
 
-###Getting Started - Create a New RStudio Project for the code in the cloned repository:
-
-![](./NewProject.png)  
-
-![](./NewProject2.png)  
-
-![](./NewProject3.png)  
-
-![](./NewProject4.png)    
-
-###Getting Started - Create .Rprofile file to load ggplot and gplot libraries when the project is started: 
-
-![](./Rprofile.png) 
-
-Create an new file named .Rprofile by copying a file, see below 
-
-![](./Rprofile1.png) 
-
-Copy what's in blue above into the new file named .Rprofile as below, 
-
-![](./Rprofile2.png) 
-
-
-###Recommended Books:
-
-![](./RforEveryone.png) ![](./ReproducibleResearch.png)  
-http://www.amazon.com/Everyone-Advanced-Analytics-Graphics-Addison-Wesley/dp/0321888030/ref=sr_1_1?ie=UTF8&qid=1404611818&sr=8-1&keywords=R+for+everyone
-
-http://www.amazon.com/Reproducible-Research-RStudio-Chapman-Series/dp/1466572841/ref=sr_1_1?ie=UTF8&qid=1404612129&sr=8-1&keywords=reproducible+research+with+r
-
-###Basic R Language Constructs
-
-See also http://cran.r-project.org/doc/manuals/r-devel/R-lang.html, http://www.r-tutor.com/r-introduction, and http://www.cookbook-r.com/
-
+###Connect to Oracle Database
 ```{r}
-source("../01 Basic R/Basic.R", echo = TRUE)
+source("../02A RJDBC/ConnectToOracle.R", echo = FALSE)
 ```
 
-###R Dataframes
-
-**A data frame is used for storing data tables. It is a list of vectors of equal length. For example, the following variable df is a data frame containing three vectors n, s, b.**
+###Plots
 
 ```{r}
-n = c(2, 3, 5) 
-s = c("aa", "bb", "cc") 
-b = c(TRUE, FALSE, TRUE) 
-df = data.frame(n, s, b)       # df is a data frame
-head(df)
-``` 
-
-Dataframes can be loaded from databases, CSVs, Excel, etc.. Loading dataframes from an Oracle database will be discussed later in this Workshop.
-
-See also http://www.r-tutor.com/r-introduction/data-frame
-
-Many R packages come with demo dataframes. The ggplot package comes with a demo dataframe called diamonds which we will use for this workshop.
-
-```{r}
-source("../02 R Dataframes/Dataframes.R", echo = TRUE)
-```
-For more on subsetting dataframes see http://www.ats.ucla.edu/stat/r/faq/subset_R.htm
-
-###Connecting to Oracle with RJDBC
-**RJDBC is an R package for makeing database connections in R.**
-
-See also http://www.rforge.net/RJDBC/, and http://bommaritollc.com/2012/11/connecting-r-to-an-oracle-database-with-rjdbc/
-
-```{r}
-source("../02A RJDBC/ConnectToOracle.R", echo = TRUE)
+#connect to Oracle database
+jdbcDriver <- JDBC(driverClass="oracle.jdbc.OracleDriver", classPath="/Library/Java/JavaVirtualMachines/jdk1.7.0_65.jdk/Contents/Home/ojdbc6.jar")
+con <- dbConnect(jdbcDriver, "jdbc:oracle:thin:@128.83.138.158:1521:orcl", "c##cs347_zi322", "orcl_zi322")
+source("../03 ggplot/Plots.R", echo = FALSE)
 ```
 
-###ggplot2
-**ggplot is an R package for data exploration and visualization. It produces production quality graphics and allows you to slice and dice your data in many different ways. ggplot uses a general scheme for data visualization which breaks graphs up into semantic components such as scales and layers. In contrast to other graphics packages, ggplot2 allows the user to add, remove or alter components in a plot at a high level of abstraction.**
-
-See also http://ggplot2.org/, http://cran.r-project.org/web/packages/ggplot2/ggplot2.pdf, and https://groups.google.com/forum/#!forum/ggplot2
-
+####Average Inpatient Billed Cost By State
 ```{r}
-source("../03 ggplot/Plots.R", echo = TRUE)
+plot(p1)
 ```
 
-**The Chapter 7 of "R for Everyone" has many more examples of ggplots.**
-
-###ggplot2 and functions
-
+####Average Outpatient Billed Cost By State
 ```{r}
-source("../03 ggplot/plotFunction.R", echo = TRUE)
+plot(p2)
 ```
 
-**You should now be able to open RWorkshop/00 Doc/4diamonds.png. It should look like the following plot.**
-
-![](./4diamonds.png) 
-
-###KnitR
-**KnitR is an R package designed to generate dynamic reports using a mix of the R, LaTex, and the Rmarkdown (see http://rmarkdown.rstudio.com/?version=0.98.945&mode=desktop) languages.**  
-
-See also http://yihui.name/knitr/ and http://kbroman.github.io/knitr_knutshell/
-
-**Simple examples can be found in "04 KnitR/doc1.Rmd" and "04 KnitR/doc2.Rmd". These can generate html, pdf, and word documents. The output from Kniting doc2.Rmd is,**  
-
-![](./KnitR.png) 
-
-####A comprehensive KnitR example (which generated this document) can be found in "00 Doc/RWorkshop.Rmd".  
-
-###slidify
-**You can use Slidify to generate HTML slide decks using only the Rmarkdown language.**  
-
-See also http://slidify.org and http://slidify.org/start.html
-
-**Follow the instructions in "05 Slidify/slidify setup.R" to install and run slidify. You should be able to produce a slide deck with a first slide that looks something like the following.** 
-
-![](./slidify.png)  
-
-**Cool trick - Any github repo with a branch called gh-pages will get served as a website. If the content of that repo is the stuff of websites (html,css), then you get free web hosting. So, create a branch called gh-pages and push to it.**  
-
-###shiny
-**The shiny R package allows you to build interactive web-based applications using only R with no knowledge of html, css, or javascript needed. You just need to write two scripts (see the example files in the 06Shiny directory):**  
-
-* ui.R : Defines the layout and the interactive elements that the user can access.  
-* server.R : Defines what computations are done in response to user interactions. 
-
-See also http://shiny.rstudio.com and http://shiny.rstudio.com/tutorial 
-
-To run the shiny app that's in the 06Shiny directory run the following in the main RWorkshop directory (make sure the working directory is set to this directory):  
-library(shiny)  
-runApp("06Shiny")   # Make sure there are no spaces in the string argument to runAPP
-
-This should pop the application up in a browser, you can also access it in a browser at http://127.0.0.1:6837. It should look like the following.
-
-![](./shiny.png) 
-
-###shinyapps
-
-The example above ran the shiny app on your local machine, but to share with others, you have to send around the R files and the user needs to have R and know a little bit about it.
-
-Instead, you can remotely host shiny apps and then just send people links. Get a free account at shinyapps.io/signup.html and give it a try.
-
-![](./shinyapps.io.png)
-
-![](./pcannata.shinyapps.io.png)
-
-**library("devtools", lib.loc="/Library/Frameworks/R.framework/Versions/3.0/Resources/library")  
-install_github( repo = "shinyapps", username="rstudio" )  
-shinyapps::setAccountInfo(name='pcannata', token='3ECF447A741004F6A8B7208C9ED778E1', secret='. . . ')**  
-
+####Average Inpatient Amount Billed Per Procedure
 ```{r}
+plot(p3)
+```
+
+####Average Outpatient Amount Billed Per Procedure
+```{r}
+plot(p4)
+```
+
+####Patient Satisfaction Ratings
+```{r}
+plot(p5)
+```
+
+####Procedure vs. Cost
+```{r}
+plot(p6)
+```
+
+####Rating vs. Cost By Procedure
+```{r}
+plot(p7)
+```
+
+####Rating vs. Cost Per State
+```{r}
+plot(p8)
+```
+
+####Cost vs. Rating for Texas Hospitals
+```{r}
+plot(p11)
+```
+
+####Austin Cost vs. Rating per Procedure
+```{r}
+plot(p12)
+```
+
+####Insured Cost By Procedure
+
+
+###Interactive Data Visualization
+
+An interactive geospatial analysis showing the correlation between average charged amount for different medical procedures is hosted as an
+app on [shinyapps.io](http://shinyapps.io).
+
+####Shiny Configuration
+First one needs to set up credentials for the ShinyApps free tier service.
+Create a shinyapps.io account and copy your credentials in order to, in order to deploy the application online.
+Install shinyApps from the GitHub repository and set your credentials for shinyapps.io like so:
+
+
+```devtools::install_github('rstudio/shinyapps')
+shinyapps::setAccountInfo(name='izac', token='<redacted>', secret='<redacted>')```
+
+####Deploying Shiny Application
+
+Deploy the Shiny app from the root folder by doing:
+**```
+deployApp("./06Shiny")
+```**
+
+**```
 library(shinyapps)
 getwd()
 # Uncomment the following line to deploy the app.
 #deployApp("../06Shiny")
-```
+```**
 
 **Now you can try the app at https://pcannata.shinyapps.io/06Shiny/ **  
-
-See also https://www.shinyapps.io/ and http://shiny.rstudio.com/articles/shinyapps.html 
-
-
